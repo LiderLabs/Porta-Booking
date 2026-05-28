@@ -63,7 +63,7 @@ export function ConfirmationPage() {
   const currentStatus = booking?.status ?? "pending";
   const statusCfg = STATUS_CONFIG[currentStatus] ?? STATUS_CONFIG.pending;
 
-  return (
+  return (<>
     <div className="bk">
       <div className="bk-header">
         <div className="bk-logo"><img src="/Porta.png" alt="Porta" style={{height:"32px",width:"auto"}}/></div>
@@ -181,5 +181,7 @@ export function ConfirmationPage() {
         }
       `}</style>
     </div>
+      <div style={{textAlign:"center",padding:"12px 24px",fontSize:"12px",fontWeight:600,color:"#3fb950",letterSpacing:"0.04em",opacity:0.85}}>© {new Date().getFullYear()} Porta · Powered by Lider Technologies LTD</div>
+  </>
   );
 }
