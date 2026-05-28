@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+﻿import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useNavigate } from "react-router-dom";
 // @ts-ignore
@@ -23,7 +23,7 @@ function StepDot({ n, current, done }: { n: number; current: number; done: boole
   );
 }
 
-/** Convert "HH:MM" → minutes from midnight */
+/** Convert "HH:MM" -> minutes from midnight */
 function toMins(t: string) {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
@@ -33,10 +33,10 @@ export function BookingPage() {
   const navigate       = useNavigate();
   const { dark, toggle } = useTheme();
 
-  // Live data — Convex keeps these updated automatically
+  // Live data - Convex keeps these updated automatically
   const staff        = useQuery(api.scheduling.listStaffPublic);
-  const allBlocked   = useQuery(api.scheduling.listAllBlockedSlots);   // all blocked slots across staff
-  const allVisits    = useQuery(api.scheduling.listApprovedVisits);    // approved+checked_in visits
+  const allBlocked   = useQuery(api.scheduling.listAllBlockedSlots);
+  const allVisits    = useQuery(api.scheduling.listApprovedVisits);
 
   const bookVisit    = useMutation(api.scheduling.publicBook);
 
@@ -58,24 +58,22 @@ export function BookingPage() {
    * Real-time conflict detection.
    * A slot is BLOCKED if, for the selected host+date+time:
    *  1. There is a blockedSlot row covering that time range, OR
-   *  2. There is an existing approved/checked_in visit at that time (±30 min window)
+   *  2. There is an existing approved/checked_in visit at that time (+/-30 min window)
    */
   const conflictReason = useMemo(() => {
     if (!form.scheduledDate || !form.scheduledTime || !form.hostStaffId) return null;
 
     const pickedMins = toMins(form.scheduledTime);
 
-    // Check blocked slots
     const blocked = (allBlocked ?? []).find((b: any) => {
       if (b.staffId !== form.hostStaffId) return false;
-     if (b.date !== form.scheduledDate)  return false;
-const start = toMins(b.startTimeStr);
-const end   = toMins(b.endTimeStr);
+      if (b.date !== form.scheduledDate)  return false;
+      const start = toMins(b.startTimeStr);
+      const end   = toMins(b.endTimeStr);
       return pickedMins >= start && pickedMins < end;
     });
     if (blocked) return blocked.reason ? `Blocked: ${blocked.reason}` : "This slot is blocked";
 
-    // Check existing visits (30-min buffer each side)
     const pickedTs = new Date(`${form.scheduledDate}T${form.scheduledTime}`).getTime();
     const clash = (allVisits ?? []).find((v: any) => {
       if (v.hostStaffId !== form.hostStaffId) return false;
@@ -123,18 +121,10 @@ const end   = toMins(b.endTimeStr);
   return (
     <div className="bk">
       <div className="bk-header">
-        <div className="bk-logo">
-          <div className="bk-logo-mark">P</div>
-          <div>
-            <div className="bk-logo-name">Porta</div>
-            <div className="bk-logo-sub">Visit booking</div>
-          </div>
-        </div>
-        <button className="bk-theme-btn" onClick={toggle}>
-          {dark ? "Light mode" : "Dark mode"}
-        </button>
+        <div className="bk-logo"><img src="/Porta.png" alt="Porta" style={{height:"32px",width:"auto"}}/></div>
+        <div style={{marginLeft:"auto"}}><button className="bk-theme-btn" onClick={toggle}>
+          {dark ? "Light mode" : "Dark mode"}</button></div>
       </div>
-
       <div className="bk-body">
         <div className="bk-hero">
           <h1 className="bk-hero-title">Book a visit</h1>
@@ -222,7 +212,6 @@ const end   = toMins(b.endTimeStr);
                     onChange={e => set("scheduledTime", e.target.value)} />
                 </div>
 
-                {/* Live conflict warning — appears instantly when a blocked/taken slot is selected */}
                 {conflictReason && form.scheduledDate && form.scheduledTime && (
                   <div className="bk-field bk-field--full">
                     <div className="bk-conflict-warning">
@@ -231,7 +220,6 @@ const end   = toMins(b.endTimeStr);
                   </div>
                 )}
 
-                {/* Availability hint when host is selected */}
                 {form.hostStaffId && !conflictReason && form.scheduledDate && form.scheduledTime && (
                   <div className="bk-field bk-field--full">
                     <div className="bk-avail-ok">
@@ -285,7 +273,7 @@ const end   = toMins(b.endTimeStr);
               <div className="bk-card-footer">
                 <button className="bk-back-btn" onClick={() => setStep("datetime")}>Back</button>
                 <button className="bk-submit-btn" disabled={submitting || !!conflictReason} onClick={handleSubmit}>
-                  {submitting ? "Submitting…" : "Confirm booking"}
+                  {submitting ? "Submitting..." : "Confirm booking"}
                 </button>
               </div>
             </div>

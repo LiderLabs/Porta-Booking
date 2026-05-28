@@ -1,9 +1,10 @@
-import { useLocation, useNavigate } from "react-router-dom";
+﻿import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "convex/react";
 // @ts-ignore
 import { api } from "../../../convex/api";
 // @ts-ignore
 import type { Id } from "../../../convex/dataModel";
+
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: string; note: string }> = {
   pending: {
     label: "Pending Review",
@@ -53,7 +54,7 @@ export function ConfirmationPage() {
   const { state } = useLocation();
   const navigate = useNavigate();
 
-  // Live polling — re-fetches automatically when Convex data changes
+  // Live polling - re-fetches automatically when Convex data changes
   const booking = useQuery(
     api.scheduling.getById,
     state?.bookingId ? { visitId: state.bookingId as Id<"scheduledVisits"> } : "skip"
@@ -65,13 +66,7 @@ export function ConfirmationPage() {
   return (
     <div className="bk">
       <div className="bk-header">
-        <div className="bk-logo">
-          <div className="bk-logo-mark">P</div>
-          <div>
-            <div className="bk-logo-name">Porta</div>
-            <div className="bk-logo-sub">Visit booking</div>
-          </div>
-        </div>
+        <div className="bk-logo"><img src="/Porta.png" alt="Porta" style={{height:"32px",width:"auto"}}/></div>
       </div>
 
       <div className="bk-body">
@@ -95,7 +90,6 @@ export function ConfirmationPage() {
           >
             <span>{statusCfg.icon}</span>
             <span>{statusCfg.label}</span>
-            {/* Pulse dot while pending */}
             {currentStatus === "pending" && (
               <span
                 style={{
@@ -155,7 +149,6 @@ export function ConfirmationPage() {
                 <span className="bk-confirm-row-value">{state.host}</span>
               </div>
             )}
-            {/* Show live status row when booking is loaded */}
             {booking && (
               <div className="bk-confirm-row">
                 <span className="bk-confirm-row-label">Status</span>
@@ -171,7 +164,7 @@ export function ConfirmationPage() {
 
           <div className="bk-confirm-note">
             {currentStatus === "pending"
-              ? "This page updates automatically — no need to refresh."
+              ? "This page updates automatically - no need to refresh."
               : statusCfg.note}
           </div>
 
@@ -181,7 +174,6 @@ export function ConfirmationPage() {
         </div>
       </div>
 
-      {/* Pulse animation */}
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; transform: scale(1); }
