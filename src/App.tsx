@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+﻿import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useState, useEffect, createContext, useContext } from "react";
 import { BookingPage } from "./features/booking/pages/BookingPage";
 import { ConfirmationPage } from "./features/booking/pages/ConfirmationPage";
@@ -14,9 +14,10 @@ function Root() {
   }, [dark]);
 
   const router = createBrowserRouter([
-    { path: "/", element: <BookingPage /> },
-    { path: "/confirmed", element: <ConfirmationPage /> },
-    { path: "*", element: <BookingPage /> },
+    { path: "/",              element: <BookingPage /> },
+    { path: "/book/:slug",    element: <BookingPage /> },
+    { path: "/confirmed",     element: <ConfirmationPage /> },
+    { path: "*",              element: <BookingPage /> },
   ]);
 
   return (
