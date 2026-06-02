@@ -97,6 +97,7 @@ export function BookingPage() {
         scheduledDate:  dt,
         duration:       form.duration,
         notes:          form.notes          || undefined,
+        orgSlug:        slug ?? undefined,
       });
       navigate("/confirmed", {
         state: { bookingId: visitId, name: form.visitorName, date: form.scheduledDate, time: form.scheduledTime, host: selectedHost?.name },
@@ -329,5 +330,6 @@ export function BookingPage() {
     </div>
   );
 }
+
 
 
