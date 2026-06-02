@@ -135,14 +135,25 @@ export function BookingPage() {
       `}</style>
 
       <div className="bk-header">
-        <div className="bk-logo">
-          {logoUrl
-            ? <img src={logoUrl} alt={orgName} style={{height:"32px",width:"auto",borderRadius:6}} />
-            : <span style={{fontWeight:800,fontSize:"1.1rem",color:primaryColor,letterSpacing:"-0.02em"}}>{orgName}</span>
-          }
+        {/* LEFT — Porta logo */}
+        <div className="bk-header-left">
+          <img src="/Porta.png" alt="Porta" style={{height:"28px",width:"auto"}} />
         </div>
-        <div style={{marginLeft:"auto"}}>
-          <button className="bk-theme-btn" onClick={toggle}>{dark ? "Light mode" : "Dark mode"}</button>
+        {/* DIVIDER */}
+        <div className="bk-header-divider" />
+        {/* RIGHT — org + sun/moon */}
+        <div className="bk-header-right">
+          <div className="bk-header-org">
+            {logoUrl && <img src={logoUrl} alt={orgName} className="bk-header-org-logo" />}
+            {orgName && orgName !== "Porta" && <span className="bk-header-org-name">{orgName}</span>}
+          </div>
+          <button className="bk-theme-btn" onClick={toggle} title={dark?"Light mode":"Dark mode"}>
+            {dark ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            )}
+          </button>
         </div>
       </div>
 
@@ -318,3 +329,5 @@ export function BookingPage() {
     </div>
   );
 }
+
+
