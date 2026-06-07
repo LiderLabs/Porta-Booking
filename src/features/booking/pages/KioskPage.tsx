@@ -63,6 +63,7 @@ export function KioskPage() {
     setScreen("landing");
     setSearchQ(""); setSearchResults([]); setSelectedVisit(null);
     setCheckInDone(false); setError(""); setSub(false);
+    setCheckoutQ(""); setCheckoutResults([]); setSelectedCheckout(null);
     setForm({ visitorName:"", visitorEmail:"", visitorPhone:"", visitorCompany:"", purpose:"", hostStaffId:"", scheduledDate: today, scheduledTime: new Date().toTimeString().slice(0,5), duration: defaultDur, notes:"" });
   }, [today]);
 
@@ -503,6 +504,81 @@ export function KioskPage() {
           </div>
         )}
 
+        {/* ── CHECKOUT SEARCH ──────────────────────────────────────────── */}
+        {screen === "checkout_search" && (
+          <div className="kiosk-fade" style={styles.formWrap}>
+            <button className="kiosk-back" onClick={resetToLanding}>← Back</button>
+            <h2 style={styles.screenTitle}>Check out</h2>
+            <p style={styles.screenSub}>Enter your name or phone number</p>
+            <div style={{display:"flex",gap:12,marginTop:24}}>
+              <input className="kiosk-input" placeholder="Your name or phone number..."
+                value={checkoutQ} onChange={e => setCheckoutQ(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleCheckoutSearch()}
+                autoFocus style={{fontSize:"1.1rem",flex:1}} />
+              <button className="kiosk-btn-primary" style={{width:"auto",padding:"16px 32px"}}
+                onClick={handleCheckoutSearch}>Search</button>
+            </div>
+            {checkoutResults.length > 0 && (
+              <div style={{marginTop:24,display:"flex",flexDirection:"column",gap:12}}>
+                <div style={styles.resultLabel}>Select your visit:</div>
+                {checkoutResults.map((v: any) => {
+                  const host = staff.find((s: any) => s._id === v.hostStaffId || s._id === v.hostId);
+                  return (
+                    <div key={v._id} className="kiosk-card" onClick={() => { setSelectedCheckout(v); setScreen("checkout_confirm"); }}>
+                      <div style={{fontWeight:700,fontSize:"1rem",color:"#e6edf3"}}>{v.visitorName}</div>
+                      <div style={{fontSize:"0.85rem",color:"#8b949e",marginTop:4}}>
+                        {host ? `Visited ${host.name}` : ""}
+                        {v.purpose ? ` · ${v.purpose}` : ""}
+                      </div>
+                      <div style={{fontSize:"0.82rem",color:"#8b949e",marginTop:2}}>
+                        {new Date(v.scheduledDate).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {checkoutQ && checkoutResults.length === 0 && (
+              <div style={styles.noResults}>No active visits found. Please see the receptionist.</div>
+            )}
+          </div>
+        )}
+
+        {/* ── CHECKOUT CONFIRM ─────────────────────────────────────────────── */}
+        {screen === "checkout_confirm" && selectedCheckout && (
+          <div className="kiosk-fade" style={styles.formWrap}>
+            <button className="kiosk-back" onClick={() => setScreen("checkout_search")}>← Back</button>
+            <h2 style={styles.screenTitle}>Confirm check-out</h2>
+            <div style={styles.confirmCard}>
+              <div style={{...styles.visitorAvatar,background:"#f85149"}}>{(selectedCheckout.visitorName??"V")[0].toUpperCase()}</div>
+              <div style={styles.visitorName}>{selectedCheckout.visitorName}</div>
+              {(() => {
+                const host = staff.find((s: any) => s._id === selectedCheckout.hostStaffId || s._id === selectedCheckout.hostId);
+                return host ? <div style={styles.visitDetail}>Visited <strong style={{color:"#e6edf3"}}>{host.name}</strong></div> : null;
+              })()}
+              <div style={styles.visitDetail}>
+                {new Date(selectedCheckout.scheduledDate).toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})}
+                {selectedCheckout.purpose ? ` · ${selectedCheckout.purpose}` : ""}
+              </div>
+            </div>
+            {error && <div style={styles.error}>{error}</div>}
+            <button className="kiosk-btn-primary" style={{marginTop:24,fontSize:"1.15rem",padding:"22px",background:"#f85149"}}
+              disabled={submitting} onClick={() => handleCheckout(selectedCheckout)}>
+              {submitting ? "Checking out..." : "Confirm Check-out"}
+            </button>
+          </div>
+        )}
+
+        {/* ── CHECKOUT DONE ────────────────────────────────────────────────── */}
+        {screen === "checkout_done" && (
+          <div className="kiosk-fade" style={styles.center}>
+            <div className="kiosk-check" style={{...styles.successIcon, background:"#f85149"}}></div>
+            <h1 style={styles.welcomeTitle}>Thank you, {selectedCheckout?.visitorName?.split(" ")[0]}!</h1>
+            <p style={styles.welcomeSub}>You have been checked out. Have a great day!</p>
+            <p style={{color:"#8b949e",fontSize:"0.85rem",marginTop:16}}>This screen will reset in a few seconds...</p>
+          </div>
+        )}
+
         {/* ── WALK-IN DONE ──────────────────────────────────────────────── */}
         {screen === "walkin_done" && (
           <div className="kiosk-fade" style={styles.center}>
@@ -570,6 +646,8 @@ const styles: Record<string, any> = {
   error: { marginTop:12, padding:"12px 16px", borderRadius:10, background:"rgba(248,81,73,0.1)", border:"1px solid rgba(248,81,73,0.3)", color:"#f85149", fontSize:"0.9rem" },
   footer: { padding:"16px 40px", borderTop:"1px solid rgba(255,255,255,0.06)", fontSize:"0.78rem", color:"#8b949e", textAlign:"center" as const, display:"flex", alignItems:"center", justifyContent:"center" },
 };
+
+
 
 
 
