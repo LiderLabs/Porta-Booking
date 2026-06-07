@@ -32,6 +32,13 @@ export function KioskPage() {
   const primaryColor = orgConfig?.branding?.primaryColor ?? "#3fb950";
   const staff        = orgConfig?.staff ?? [];
   const purposes     = orgConfig?.rules?.allowedPurposes ?? ["Meeting","Interview","Delivery","Consultation","Site visit","Other"];
+  const durations    = orgConfig?.rules?.allowedDurations  ?? [30,60,90,120];
+  const defaultDur   = orgConfig?.rules?.defaultDuration   ?? 60;
+  const walkInEnabled   = orgConfig?.rules?.walkInEnabled  ?? true;
+  const emailRequired   = orgConfig?.rules?.emailRequired   ?? false;
+  const phoneRequired   = orgConfig?.rules?.phoneRequired   ?? false;
+  const companyRequired = orgConfig?.rules?.companyRequired ?? false;
+  const purposeRequired = orgConfig?.rules?.purposeRequired ?? false;
 
   const [screen, setScreen]       = useState<Screen>("landing");
   const [searchQ, setSearchQ]     = useState("");
@@ -47,7 +54,7 @@ export function KioskPage() {
     visitorCompany:"", purpose:"", hostStaffId:"",
     scheduledDate: today,
     scheduledTime: new Date().toTimeString().slice(0,5),
-    duration: 60, notes:"",
+    duration: defaultDur, notes:"",
   });
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
 
@@ -56,7 +63,7 @@ export function KioskPage() {
     setScreen("landing");
     setSearchQ(""); setSearchResults([]); setSelectedVisit(null);
     setCheckInDone(false); setError(""); setSub(false);
-    setForm({ visitorName:"", visitorEmail:"", visitorPhone:"", visitorCompany:"", purpose:"", hostStaffId:"", scheduledDate: today, scheduledTime: new Date().toTimeString().slice(0,5), duration: 60, notes:"" });
+    setForm({ visitorName:"", visitorEmail:"", visitorPhone:"", visitorCompany:"", purpose:"", hostStaffId:"", scheduledDate: today, scheduledTime: new Date().toTimeString().slice(0,5), duration: defaultDur, notes:"" });
   }, [today]);
 
   useEffect(() => {
@@ -365,22 +372,22 @@ export function KioskPage() {
                   onChange={e => set("visitorName", e.target.value)} />
               </div>
               <div style={styles.field}>
-                <label style={styles.label}>Email address</label>
+                <label style={styles.label}>Email address{emailRequired && <span style={{color:"#f85149"}}> *</span>}</label>
                 <input className="kiosk-input" type="email" placeholder="jane@company.com" value={form.visitorEmail}
                   onChange={e => set("visitorEmail", e.target.value)} />
               </div>
               <div style={styles.field}>
-                <label style={styles.label}>Phone number</label>
+                <label style={styles.label}>Phone number{phoneRequired && <span style={{color:"#f85149"}}> *</span>}</label>
                 <input className="kiosk-input" type="tel" placeholder="0244123456" maxLength={10} onKeyPress={(e)=>{if(!/[0-9]/.test(e.key))e.preventDefault()}} value={form.visitorPhone}
                   onChange={e => set("visitorPhone", e.target.value)} />
               </div>
               <div style={styles.field}>
-                <label style={styles.label}>Company / Organisation</label>
+                <label style={styles.label}>Company / Organisation{companyRequired && <span style={{color:"#f85149"}}> *</span>}</label>
                 <input className="kiosk-input" placeholder="Acme Corp" value={form.visitorCompany}
                   onChange={e => set("visitorCompany", e.target.value)} />
               </div>
               <div style={styles.field}>
-                <label style={styles.label}>Purpose of visit</label>
+                <label style={styles.label}>Purpose of visit{purposeRequired && <span style={{color:"#f85149"}}> *</span>}</label>
                 <select className="kiosk-select" value={form.purpose}
                   onChange={e => set("purpose", e.target.value)}>
                   <option value="">Select purpose</option>
@@ -402,7 +409,7 @@ export function KioskPage() {
             </div>
             <div style={{display:"flex",justifyContent:"flex-end",marginTop:24}}>
               <button className="kiosk-btn-primary" style={{width:"auto",padding:"16px 48px",fontSize:"1rem"}}
-                disabled={!form.visitorName || !form.hostStaffId}
+                disabled={!form.visitorName || !form.hostStaffId || (emailRequired && !form.visitorEmail) || (phoneRequired && !form.visitorPhone) || (companyRequired && !form.visitorCompany) || (purposeRequired && !form.purpose)}
                 onClick={() => setScreen("walkin_datetime")}>
                 Next →
               </button>
@@ -429,7 +436,7 @@ export function KioskPage() {
               <div style={styles.fieldFull}>
                 <label style={styles.label}>Duration</label>
                 <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:6}}>
-                  {[30,60,90,120].map(mins => (
+                  {durations.map(mins => (
                     <button key={mins} type="button"
                       onClick={() => set("duration", mins)}
                       style={{padding:"12px 24px",borderRadius:12,border:"1px solid",fontWeight:700,fontSize:"0.95rem",cursor:"pointer",fontFamily:"inherit",transition:"all .15s",
@@ -563,6 +570,8 @@ const styles: Record<string, any> = {
   error: { marginTop:12, padding:"12px 16px", borderRadius:10, background:"rgba(248,81,73,0.1)", border:"1px solid rgba(248,81,73,0.3)", color:"#f85149", fontSize:"0.9rem" },
   footer: { padding:"16px 40px", borderTop:"1px solid rgba(255,255,255,0.06)", fontSize:"0.78rem", color:"#8b949e", textAlign:"center" as const, display:"flex", alignItems:"center", justifyContent:"center" },
 };
+
+
 
 
 

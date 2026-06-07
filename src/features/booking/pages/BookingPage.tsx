@@ -44,7 +44,11 @@ export function BookingPage() {
   const staff        = orgConfig?.staff ?? [];
   const purposes     = orgConfig?.rules?.allowedPurposes ?? ["Meeting","Interview","Delivery","Consultation","Site visit","Other"];
   const durations    = orgConfig?.rules?.allowedDurations ?? [30,60,90,120];
-  const defaultDur   = orgConfig?.rules?.defaultDuration ?? 60;
+  const defaultDur      = orgConfig?.rules?.defaultDuration ?? 60;
+const emailRequired   = orgConfig?.rules?.emailRequired   ?? false;
+const phoneRequired   = orgConfig?.rules?.phoneRequired   ?? false;
+const companyRequired = orgConfig?.rules?.companyRequired ?? false;
+const purposeRequired = orgConfig?.rules?.purposeRequired ?? false;
 
   const [step, setStep]      = useState<Step>("details");
   const [submitting, setSub] = useState(false);
@@ -106,7 +110,7 @@ export function BookingPage() {
     finally { setSub(false); }
   };
 
-  const canNext1 = !!form.visitorName;
+  const canNext1 = !!form.visitorName && (!emailRequired || !!form.visitorEmail) && (!phoneRequired || !!form.visitorPhone) && (!companyRequired || !!form.visitorCompany) && (!purposeRequired || !!form.purpose);
   const canNext2 = !!form.scheduledDate && !!form.scheduledTime && !!form.duration && !conflictReason;
   const STEPS    = ["Your details", "Date & time", "Review & confirm"];
   const stepIdx  = step === "details" ? 0 : step === "datetime" ? 1 : 2;
@@ -189,22 +193,22 @@ export function BookingPage() {
                     onChange={e => set("visitorName", e.target.value)} />
                 </div>
                 <div className="bk-field">
-                  <label className="bk-label">Email address</label>
+                  <label className="bk-label">Email address{emailRequired && <span className="bk-req"> *</span>}</label>
                   <input className="bk-input" type="email" placeholder="jane@company.com" value={form.visitorEmail}
                     onChange={e => set("visitorEmail", e.target.value)} />
                 </div>
                 <div className="bk-field">
-                  <label className="bk-label">Phone number</label>
+                  <label className="bk-label">Phone number{phoneRequired && <span className="bk-req"> *</span>}</label>
                   <input className="bk-input" type="tel" placeholder="+233 55 000 0000" value={form.visitorPhone}
                     onChange={e => set("visitorPhone", e.target.value)} />
                 </div>
                 <div className="bk-field">
-                  <label className="bk-label">Company / Organisation</label>
+                  <label className="bk-label">Company / Organisation{companyRequired && <span className="bk-req"> *</span>}</label>
                   <input className="bk-input" placeholder="Acme Corp" value={form.visitorCompany}
                     onChange={e => set("visitorCompany", e.target.value)} />
                 </div>
                 <div className="bk-field">
-                  <label className="bk-label">Purpose of visit</label>
+                  <label className="bk-label">Purpose of visit{purposeRequired && <span className="bk-req"> *</span>}</label>
                   <select className="bk-input bk-select" value={form.purpose}
                     onChange={e => set("purpose", e.target.value)}>
                     <option value="">Select a purpose</option>
@@ -330,6 +334,7 @@ export function BookingPage() {
     </div>
   );
 }
+
 
 
 
