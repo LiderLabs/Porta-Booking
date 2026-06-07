@@ -1,6 +1,7 @@
 ﻿import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { useState, useEffect, createContext, useContext } from "react";
 import { BookingPage } from "./features/booking/pages/BookingPage";
+import { KioskPage } from "./features/booking/pages/KioskPage";
 import { ConfirmationPage } from "./features/booking/pages/ConfirmationPage";
 
 export const ThemeContext = createContext<{ dark: boolean; toggle: () => void }>({ dark: true, toggle: () => {} });
@@ -17,6 +18,7 @@ function Root() {
     { path: "/",              element: <BookingPage /> },
     { path: "/book/:slug",    element: <BookingPage /> },
     { path: "/confirmed",     element: <ConfirmationPage /> },
+    { path: "/kiosk/:slug",    element: <KioskPage /> },
     { path: "*",              element: <BookingPage /> },
   ]);
 
