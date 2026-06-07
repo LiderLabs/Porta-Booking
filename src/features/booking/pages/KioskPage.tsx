@@ -242,7 +242,7 @@ export function KioskPage() {
         {/* ── LANDING ──────────────────────────────────────────────────── */}
         {screen === "landing" && (
           <div className="kiosk-fade" style={styles.center}>
-            <div style={styles.welcomeIcon}>👋</div>
+            
             <h1 style={styles.welcomeTitle}>Welcome to {orgName}</h1>
             <p style={styles.welcomeSub}>How can we help you today?</p>
             <div style={styles.landingBtns}>
@@ -355,7 +355,7 @@ export function KioskPage() {
         {screen === "walkin_details" && (
           <div className="kiosk-fade" style={styles.formWrap}>
             <button className="kiosk-back" onClick={resetToLanding}>← Back</button>
-            <h2 style={styles.screenTitle}>Tell us about yourself</h2>
+            <h2 style={styles.screenTitle}>Book an appointment</h2>
             <div style={styles.fieldGrid}>
               <div style={styles.fieldFull}>
                 <label style={styles.label}>Full name <span style={{color:"#f85149"}}>*</span></label>
@@ -563,3 +563,4 @@ const styles: Record<string, any> = {
   error: { marginTop:12, padding:"12px 16px", borderRadius:10, background:"rgba(248,81,73,0.1)", border:"1px solid rgba(248,81,73,0.3)", color:"#f85149", fontSize:"0.9rem" },
   footer: { padding:"16px 40px", borderTop:"1px solid rgba(255,255,255,0.06)", fontSize:"0.78rem", color:"#8b949e", textAlign:"center" as const, display:"flex", alignItems:"center", justifyContent:"center" },
 };
+
