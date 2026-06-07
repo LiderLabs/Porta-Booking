@@ -18,6 +18,8 @@ type Screen =
   | "walkin_done";
 
 export function KioskPage() {
+  const [now, setNow] = useState(new Date());
+  useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
   const { slug } = useParams<{ slug?: string }>();
 
   const orgConfig  = useQuery(api.orgSettings.getPublicConfig, slug ? { slug } : {});
@@ -44,7 +46,7 @@ export function KioskPage() {
     visitorName:"", visitorEmail:"", visitorPhone:"",
     visitorCompany:"", purpose:"", hostStaffId:"",
     scheduledDate: today,
-    scheduledTime: (() => { const n=new Date(); n.setMinutes(n.getMinutes()>=30?30:0,0,0); return n.toTimeString().slice(0,5); })(),
+    scheduledTime: new Date().toTimeString().slice(0,5),
     duration: 60, notes:"",
   });
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
@@ -54,7 +56,7 @@ export function KioskPage() {
     setScreen("landing");
     setSearchQ(""); setSearchResults([]); setSelectedVisit(null);
     setCheckInDone(false); setError(""); setSub(false);
-    setForm({ visitorName:"", visitorEmail:"", visitorPhone:"", visitorCompany:"", purpose:"", hostStaffId:"", scheduledDate: today, scheduledTime: (() => { const n=new Date(); n.setMinutes(n.getMinutes()>=30?30:0,0,0); return n.toTimeString().slice(0,5); })(), duration: 60, notes:"" });
+    setForm({ visitorName:"", visitorEmail:"", visitorPhone:"", visitorCompany:"", purpose:"", hostStaffId:"", scheduledDate: today, scheduledTime: new Date().toTimeString().slice(0,5), duration: 60, notes:"" });
   }, [today]);
 
   useEffect(() => {
@@ -231,8 +233,8 @@ export function KioskPage() {
           <span style={styles.orgName}>{orgName}</span>
         </div>
         <div style={styles.headerRight}>
-          <div style={styles.clock}>{new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</div>
-          <div style={styles.date}>{new Date().toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"})}</div>
+          <div style={styles.clock}>{now.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</div>
+          <div style={styles.date}>{now.toLocaleDateString([], {weekday:"long",month:"long",day:"numeric"})}</div>
         </div>
       </div>
 
@@ -561,6 +563,8 @@ const styles: Record<string, any> = {
   error: { marginTop:12, padding:"12px 16px", borderRadius:10, background:"rgba(248,81,73,0.1)", border:"1px solid rgba(248,81,73,0.3)", color:"#f85149", fontSize:"0.9rem" },
   footer: { padding:"16px 40px", borderTop:"1px solid rgba(255,255,255,0.06)", fontSize:"0.78rem", color:"#8b949e", textAlign:"center" as const, display:"flex", alignItems:"center", justifyContent:"center" },
 };
+
+
 
 
 
