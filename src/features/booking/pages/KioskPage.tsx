@@ -248,13 +248,13 @@ export function KioskPage() {
             <div style={styles.landingBtns}>
               <button className="kiosk-btn-primary" style={{fontSize:"1.25rem",padding:"28px 40px"}}
                 onClick={() => setScreen("checkin_search")}>
-                ✅ I have a scheduled visit
+                 I have a scheduled visit
                 <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Search and check in</div>
               </button>
               <button className="kiosk-btn-secondary" style={{fontSize:"1.25rem",padding:"28px 40px"}}
                 onClick={() => setScreen("walkin_details")}>
-                📋 I don't have a schedule
-                <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Register your visit</div>
+                 I don't have a schedule
+                <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Check in at reception</div>
               </button>
             </div>
           </div>
@@ -333,7 +333,7 @@ export function KioskPage() {
             {error && <div style={styles.error}>{error}</div>}
             <button className="kiosk-btn-primary" style={{marginTop:24,fontSize:"1.15rem",padding:"22px"}}
               disabled={submitting} onClick={() => handleCheckIn(selectedVisit)}>
-              {submitting ? "Checking in..." : "✅ Confirm Check-in"}
+              {submitting ? "Checking in..." : " Confirm Check-in"}
             </button>
           </div>
         )}
@@ -341,11 +341,11 @@ export function KioskPage() {
         {/* ── CHECK-IN DONE ─────────────────────────────────────────────── */}
         {screen === "checkin_done" && (
           <div className="kiosk-fade" style={styles.center}>
-            <div className="kiosk-check" style={{...styles.successIcon, background: primaryColor}}>✓</div>
+            <div className="kiosk-check" style={{...styles.successIcon, background: primaryColor}}></div>
             <h1 style={styles.welcomeTitle}>You're checked in!</h1>
             <p style={styles.welcomeSub}>
               {selectedVisit?.visitorName ? `Welcome, ${selectedVisit.visitorName.split(" ")[0]}!` : "Welcome!"}
-              {" "}Your host has been notified. Please have a seat.
+              {" "}Your host will be with you shortly.
             </p>
             <p style={{color:"#8b949e",fontSize:"0.85rem",marginTop:16}}>This screen will reset in a few seconds...</p>
           </div>
@@ -369,7 +369,7 @@ export function KioskPage() {
               </div>
               <div style={styles.field}>
                 <label style={styles.label}>Phone number</label>
-                <input className="kiosk-input" type="tel" placeholder="+233 55 000 0000" value={form.visitorPhone}
+                <input className="kiosk-input" type="tel" placeholder="0244123456" maxLength={10} onKeyPress={(e)=>{if(!/[0-9]/.test(e.key))e.preventDefault()}} value={form.visitorPhone}
                   onChange={e => set("visitorPhone", e.target.value)} />
               </div>
               <div style={styles.field}>
@@ -412,7 +412,7 @@ export function KioskPage() {
         {screen === "walkin_datetime" && (
           <div className="kiosk-fade" style={styles.formWrap}>
             <button className="kiosk-back" onClick={() => setScreen("walkin_details")}>← Back</button>
-            <h2 style={styles.screenTitle}>When would you like to meet?</h2>
+            <h2 style={styles.screenTitle}>Date and time</h2>
             <div style={styles.fieldGrid}>
               <div style={styles.field}>
                 <label style={styles.label}>Date <span style={{color:"#f85149"}}>*</span></label>
@@ -480,9 +480,7 @@ export function KioskPage() {
               ))}
             </div>
             {error && <div style={styles.error}>{error}</div>}
-            <div style={{marginTop:16,padding:"12px 16px",borderRadius:10,background:"rgba(245,158,11,0.1)",border:"1px solid rgba(245,158,11,0.3)",fontSize:"0.85rem",color:"#f59e0b"}}>
-              ℹ️ Your visit request will be reviewed and confirmed by the team. Please wait at reception.
-            </div>
+            
             <div style={{display:"flex",gap:12,marginTop:20}}>
               <button className="kiosk-btn-secondary" style={{fontSize:"0.95rem",padding:"16px"}}
                 onClick={() => setScreen("walkin_details")}>
@@ -499,7 +497,7 @@ export function KioskPage() {
         {/* ── WALK-IN DONE ──────────────────────────────────────────────── */}
         {screen === "walkin_done" && (
           <div className="kiosk-fade" style={styles.center}>
-            <div className="kiosk-check" style={{...styles.successIcon, background:"#f59e0b"}}>📋</div>
+            <div className="kiosk-check" style={{...styles.successIcon, background:"#f59e0b"}}></div>
             <h1 style={styles.welcomeTitle}>Request submitted!</h1>
             <p style={styles.welcomeSub}>
               Thank you, {form.visitorName.split(" ")[0]}! Your visit request has been received.
@@ -563,4 +561,8 @@ const styles: Record<string, any> = {
   error: { marginTop:12, padding:"12px 16px", borderRadius:10, background:"rgba(248,81,73,0.1)", border:"1px solid rgba(248,81,73,0.3)", color:"#f85149", fontSize:"0.9rem" },
   footer: { padding:"16px 40px", borderTop:"1px solid rgba(255,255,255,0.06)", fontSize:"0.78rem", color:"#8b949e", textAlign:"center" as const, display:"flex", alignItems:"center", justifyContent:"center" },
 };
+
+
+
+
 
