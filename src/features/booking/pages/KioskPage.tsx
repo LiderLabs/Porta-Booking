@@ -15,7 +15,10 @@ type Screen =
   | "walkin_details"
   | "walkin_datetime"
   | "walkin_review"
-  | "walkin_done";
+  | "walkin_done"
+  | "checkout_search"
+  | "checkout_confirm"
+  | "checkout_done";
 
 export function KioskPage() {
   const [now, setNow] = useState(new Date());
@@ -25,7 +28,9 @@ export function KioskPage() {
   const orgConfig  = useQuery(api.orgSettings.getPublicConfig, slug ? { slug } : {});
   const allVisits  = useQuery(api.scheduling.listApprovedVisits);
   const bookVisit  = useMutation(api.scheduling.publicBook);
-  const checkIn    = useMutation(api.scheduling.markCheckedIn);
+  const checkIn      = useMutation(api.scheduling.markCheckedIn);
+  const checkOut     = useMutation(api.scheduling.markCompleted);
+  const checkOutVisitor = useMutation(api.visitors.checkOut);
 
   const orgName      = orgConfig?.branding?.appName ?? orgConfig?.org?.name ?? "Porta";
   const logoUrl      = orgConfig?.branding?.logoUrl ?? null;
@@ -47,6 +52,9 @@ export function KioskPage() {
   const [checkInDone, setCheckInDone]     = useState(false);
   const [submitting, setSub]      = useState(false);
   const [error, setError]         = useState("");
+  const [checkoutQ, setCheckoutQ]           = useState("");
+  const [checkoutResults, setCheckoutResults] = useState<any[]>([]);
+  const [selectedCheckout, setSelectedCheckout] = useState<any>(null);
 
   const today = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({
@@ -57,6 +65,30 @@ export function KioskPage() {
     duration: defaultDur, notes:"",
   });
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+
+  // ── checkout search ───────────────────────────────────────────────────────
+  const handleCheckoutSearch = () => {
+    if (!checkoutQ.trim()) return;
+    const q = checkoutQ.toLowerCase();
+    const results = (allVisits ?? []).filter((v: any) => {
+      const nameMatch  = (v.visitorName  ?? "").toLowerCase().includes(q);
+      const phoneMatch = (v.visitorPhone ?? "").toLowerCase().includes(q);
+      const active = ["checked_in", "in_meeting", "approved", "accepted"].includes(v.status);
+      return (nameMatch || phoneMatch) && active;
+    });
+    setCheckoutResults(results);
+  };
+
+  // ── checkout confirm ──────────────────────────────────────────────────────
+  const handleCheckout = async (visit: any) => {
+    setSub(true); setError("");
+    try {
+      await checkOut({ visitId: visit._id });
+      setScreen("checkout_done");
+      setTimeout(resetToLanding, 8000);
+    } catch { setError("Checkout failed. Please see the receptionist."); }
+    finally { setSub(false); }
+  };
 
   // ── idle reset ────────────────────────────────────────────────────────────
   const resetToLanding = useCallback(() => {
@@ -265,6 +297,11 @@ export function KioskPage() {
                 onClick={() => setScreen("walkin_details")}>
                  I don't have a schedule
                 <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Check in at reception</div>
+              </button>
+              <button className="kiosk-btn-secondary" style={{fontSize:"1.25rem",padding:"28px 40px",borderColor:"rgba(248,81,73,0.3)",color:"#f85149"}}
+                onClick={() => setScreen("checkout_search")}>
+                 I’m leaving
+                <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Check out</div>
               </button>
             </div>
           </div>
