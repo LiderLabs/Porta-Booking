@@ -21,6 +21,14 @@ type Screen =
   | "checkout_done";
 
 export function KioskPage() {
+  // Swap to kiosk manifest so PWA installs with correct start_url
+  useEffect(() => {
+    const link = document.querySelector('link[rel="manifest"]');
+    const prev = link ? link.getAttribute('href') : '';
+    if (link) link.setAttribute('href', '/manifest-kiosk.json');
+    return () => { if (link && prev) link.setAttribute('href', prev); };
+  }, []);
+
   const [now, setNow] = useState(new Date());
   useEffect(() => { const t = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(t); }, []);
   const { slug } = useParams<{ slug?: string }>();
