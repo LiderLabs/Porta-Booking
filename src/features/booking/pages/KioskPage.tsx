@@ -319,7 +319,7 @@ export function KioskPage() {
                 className="kiosk-input"
                 placeholder="Your name or email..."
                 value={searchQ}
-                onChange={e => setSearchQ(e.target.value)}
+                onChange={e => { setSearchQ(e.target.value); const q = e.target.value.toLowerCase(); if (!q.trim()) { setSearchResults([]); return; } const today_start = new Date(); today_start.setHours(0,0,0,0); const r = (allVisits ?? []).filter((v) => { const nameMatch = (v.visitorName ?? "").toLowerCase().includes(q); const emailMatch = (v.visitorEmail ?? "").toLowerCase().includes(q); const phoneMatch = (v.visitorPhone ?? "").toLowerCase().includes(q); return (nameMatch || emailMatch || phoneMatch) && v.scheduledDate >= today_start.getTime(); }); setSearchResults(r); }}
                 onKeyDown={e => e.key === "Enter" && handleSearch()}
                 autoFocus
                 style={{fontSize:"1.1rem",flex:1}}
@@ -550,7 +550,7 @@ export function KioskPage() {
             <p style={styles.screenSub}>Enter your name, phone number or email</p>
             <div style={{display:"flex",gap:12,marginTop:24}}>
               <input className="kiosk-input" placeholder="Your name, phone or email..."
-                value={checkoutQ} onChange={e => { setCheckoutQ(e.target.value); if (!e.target.value.trim()) setCheckoutResults([]); }}
+                value={checkoutQ} onChange={e => { const val = e.target.value; setCheckoutQ(val); const q = val.toLowerCase(); if (!q.trim()) { setCheckoutResults([]); return; } const r = (allVisits ?? []).filter((v) => { const nameMatch = (v.visitorName ?? "").toLowerCase().includes(q); const phoneMatch = (v.visitorPhone ?? "").toLowerCase().includes(q); const emailMatch = (v.visitorEmail ?? "").toLowerCase().includes(q); const active = ["checked_in","in_meeting","approved","accepted"].includes(v.status); return (nameMatch || phoneMatch || emailMatch) && active; }); setCheckoutResults(r); }}
                 onKeyDown={e => e.key === "Enter" && handleCheckoutSearch()}
                 autoFocus style={{fontSize:"1.1rem",flex:1}} />
               <button className="kiosk-btn-primary" style={{width:"auto",padding:"16px 32px"}}
