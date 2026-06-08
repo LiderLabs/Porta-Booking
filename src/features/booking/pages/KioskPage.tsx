@@ -73,8 +73,9 @@ export function KioskPage() {
     const results = (allVisits ?? []).filter((v: any) => {
       const nameMatch  = (v.visitorName  ?? "").toLowerCase().includes(q);
       const phoneMatch = (v.visitorPhone ?? "").toLowerCase().includes(q);
+      const emailMatch = (v.visitorEmail ?? "").toLowerCase().includes(q);
       const active = ["checked_in", "in_meeting", "approved", "accepted"].includes(v.status);
-      return (nameMatch || phoneMatch) && active;
+      return (nameMatch || phoneMatch || emailMatch) && active;
     });
     setCheckoutResults(results);
   };
@@ -300,8 +301,8 @@ export function KioskPage() {
               </button>
               <button className="kiosk-btn-secondary" style={{fontSize:"1.25rem",padding:"28px 40px",borderColor:"rgba(248,81,73,0.3)",color:"#f85149"}}
                 onClick={() => setScreen("checkout_search")}>
-                 I’m leaving
-                <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Check out</div>
+                 Already checked in?
+                <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Check out now</div>
               </button>
             </div>
           </div>
@@ -546,10 +547,10 @@ export function KioskPage() {
           <div className="kiosk-fade" style={styles.formWrap}>
             <button className="kiosk-back" onClick={resetToLanding}>← Back</button>
             <h2 style={styles.screenTitle}>Check out</h2>
-            <p style={styles.screenSub}>Enter your name or phone number</p>
+            <p style={styles.screenSub}>Enter your name, phone number or email</p>
             <div style={{display:"flex",gap:12,marginTop:24}}>
-              <input className="kiosk-input" placeholder="Your name or phone number..."
-                value={checkoutQ} onChange={e => setCheckoutQ(e.target.value)}
+              <input className="kiosk-input" placeholder="Your name, phone or email..."
+                value={checkoutQ} onChange={e => { setCheckoutQ(e.target.value); if (!e.target.value.trim()) setCheckoutResults([]); }}
                 onKeyDown={e => e.key === "Enter" && handleCheckoutSearch()}
                 autoFocus style={{fontSize:"1.1rem",flex:1}} />
               <button className="kiosk-btn-primary" style={{width:"auto",padding:"16px 32px"}}
