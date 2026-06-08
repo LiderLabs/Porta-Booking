@@ -289,20 +289,20 @@ export function KioskPage() {
             <h1 style={styles.welcomeTitle}>Welcome to {orgName}</h1>
             <p style={styles.welcomeSub}>How can we help you today?</p>
             <div style={styles.landingBtns}>
+              <button className="kiosk-btn-secondary" style={{fontSize:"1.25rem",padding:"28px 40px"}}
+                onClick={() => setScreen("walkin_details")}>
+                 I don’t have a schedule
+                <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Sign in</div>
+              </button>
               <button className="kiosk-btn-primary" style={{fontSize:"1.25rem",padding:"28px 40px"}}
                 onClick={() => setScreen("checkin_search")}>
                  I have a scheduled visit
                 <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Search and check in</div>
               </button>
-              <button className="kiosk-btn-secondary" style={{fontSize:"1.25rem",padding:"28px 40px"}}
-                onClick={() => setScreen("walkin_details")}>
-                 I don't have a schedule
-                <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Check in at reception</div>
-              </button>
               <button className="kiosk-btn-secondary" style={{fontSize:"1.25rem",padding:"28px 40px",borderColor:"rgba(248,81,73,0.3)",color:"#f85149"}}
                 onClick={() => setScreen("checkout_search")}>
                  Already checked in?
-                <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Check out now</div>
+                <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Sign out</div>
               </button>
             </div>
           </div>
