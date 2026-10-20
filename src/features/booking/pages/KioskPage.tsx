@@ -1,6 +1,6 @@
 ﻿// @ts-nocheck
 import { useState, useEffect, useCallback } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvex } from "convex/react";
 import { useParams } from "react-router-dom";
 import { api } from "../../convex/api";
 
@@ -34,9 +34,9 @@ export function KioskPage() {
   const { slug } = useParams<{ slug?: string }>();
 
   const orgConfig  = useQuery(api.orgSettings.getPublicConfig, slug ? { slug } : {});
-  const allVisits  = useQuery(api.scheduling.listApprovedVisits);
+  const convex     = useConvex();
   const bookVisit  = useMutation(api.scheduling.publicBook);
-  const checkIn      = useMutation(api.scheduling.markCheckedIn);
+  const checkIn      = useMutation(api.scheduling.selfCheckIn);
   const checkOut     = useMutation(api.scheduling.markCompleted);
   const checkOutVisitor = useMutation(api.visitors.checkOut);
 
@@ -63,6 +63,8 @@ export function KioskPage() {
   const [checkoutQ, setCheckoutQ]           = useState("");
   const [checkoutResults, setCheckoutResults] = useState<any[]>([]);
   const [selectedCheckout, setSelectedCheckout] = useState<any>(null);
+  const [searching, setSearching] = useState(false);
+  const [searched, setSearched]   = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
   const [form, setForm] = useState({
@@ -76,16 +78,7 @@ export function KioskPage() {
 
   // ── checkout search ───────────────────────────────────────────────────────
   const handleCheckoutSearch = () => {
-    if (!checkoutQ.trim()) return;
-    const q = checkoutQ.toLowerCase();
-    const results = (allVisits ?? []).filter((v: any) => {
-      const nameMatch  = (v.visitorName  ?? "").toLowerCase().includes(q);
-      const phoneMatch = (v.visitorPhone ?? "").toLowerCase().includes(q);
-      const emailMatch = (v.visitorEmail ?? "").toLowerCase().includes(q);
-      const active = ["checked_in", "in_meeting", "approved", "accepted"].includes(v.status);
-      return (nameMatch || phoneMatch || emailMatch) && active;
-    });
-    setCheckoutResults(results);
+    // Kiosk check-out is switched off until the backend has findMyCheckedInVisit and selfCheckOut.
   };
 
   // ── checkout confirm ──────────────────────────────────────────────────────
@@ -102,7 +95,7 @@ export function KioskPage() {
   // ── idle reset ────────────────────────────────────────────────────────────
   const resetToLanding = useCallback(() => {
     setScreen("landing");
-    setSearchQ(""); setSearchResults([]); setSelectedVisit(null);
+    setSearchQ(""); setSearchResults([]); setSelectedVisit(null); setSearched(false);
     setCheckInDone(false); setError(""); setSub(false);
     setCheckoutQ(""); setCheckoutResults([]); setSelectedCheckout(null);
     setForm({ visitorName:"", visitorEmail:"", visitorPhone:"", visitorCompany:"", purpose:"", hostStaffId:"", scheduledDate: today, scheduledTime: new Date().toTimeString().slice(0,5), duration: defaultDur, notes:"" });
@@ -118,18 +111,19 @@ export function KioskPage() {
   }, [screen, resetToLanding]);
 
   // ── search existing bookings ───────────────────────────────────────────────
-  const handleSearch = () => {
-    if (!searchQ.trim()) return;
-    const q = searchQ.toLowerCase();
-    const today_start = new Date(today).getTime();
-    const results = (allVisits ?? []).filter((v: any) => {
-      const nameMatch  = (v.visitorName  ?? "").toLowerCase().includes(q);
-      const emailMatch = (v.visitorEmail ?? "").toLowerCase().includes(q);
-      const isToday    = v.scheduledDate >= today_start;
-      const isPending  = ["pending","approved","accepted"].includes(v.status);
-      return (nameMatch || emailMatch) && isToday && isPending;
-    });
-    setSearchResults(results);
+  const handleSearch = async () => {
+    const email = searchQ.trim();
+    if (!email || !slug) return;
+    setSearching(true); setError("");
+    try {
+      const results = await convex.query(api.scheduling.findMyVisit, { orgSlug: slug, email });
+      setSearchResults(results);
+    } catch {
+      setSearchResults([]);
+      setError("Search failed. Please see the receptionist.");
+    } finally {
+      setSearching(false); setSearched(true);
+    }
   };
 
   // ── self check-in ──────────────────────────────────────────────────────────
@@ -307,11 +301,7 @@ export function KioskPage() {
                  I have a scheduled visit
                 <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Search and check in</div>
               </button>
-              <button className="kiosk-btn-secondary" style={{fontSize:"1.25rem",padding:"28px 40px",borderColor:"rgba(248,81,73,0.3)",color:"#f85149"}}
-                onClick={() => setScreen("checkout_search")}>
-                 Already checked in?
-                <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Sign out</div>
-              </button>
+              {/* Kiosk check-out is hidden until the backend has selfCheckOut. */}
             </div>
           </div>
         )}
@@ -321,20 +311,20 @@ export function KioskPage() {
           <div className="kiosk-fade" style={styles.formWrap}>
             <button className="kiosk-back" onClick={resetToLanding}>← Back</button>
             <h2 style={styles.screenTitle}>Find your booking</h2>
-            <p style={styles.screenSub}>Enter your name or email address</p>
+            <p style={styles.screenSub}>Enter the email address you booked with</p>
             <div style={{display:"flex",gap:12,marginTop:24}}>
               <input
                 className="kiosk-input"
-                placeholder="Your name or email..."
+                type="email" placeholder="Your email address..."
                 value={searchQ}
-                onChange={e => { setSearchQ(e.target.value); const q = e.target.value.toLowerCase(); if (!q.trim()) { setSearchResults([]); return; } const today_start = new Date(); today_start.setHours(0,0,0,0); const r = (allVisits ?? []).filter((v) => { const nameMatch = (v.visitorName ?? "").toLowerCase().includes(q); const emailMatch = (v.visitorEmail ?? "").toLowerCase().includes(q); const phoneMatch = (v.visitorPhone ?? "").toLowerCase().includes(q); return (nameMatch || emailMatch || phoneMatch) && v.scheduledDate >= today_start.getTime(); }); setSearchResults(r); }}
+                onChange={e => { setSearchQ(e.target.value); setSearched(false); }}
                 onKeyDown={e => e.key === "Enter" && handleSearch()}
                 autoFocus
                 style={{fontSize:"1.1rem",flex:1}}
               />
               <button className="kiosk-btn-primary" style={{width:"auto",padding:"16px 32px"}}
-                onClick={handleSearch}>
-                Search
+                disabled={searching} onClick={handleSearch}>
+                {searching ? "Searching..." : "Search"}
               </button>
             </div>
 
@@ -342,7 +332,7 @@ export function KioskPage() {
               <div style={{marginTop:24,display:"flex",flexDirection:"column",gap:12}}>
                 <div style={styles.resultLabel}>Select your booking:</div>
                 {searchResults.map((v: any) => {
-                  const host = staff.find((s: any) => s._id === v.hostStaffId || s._id === v.hostId);
+                  const host = v.hostName ? { name: v.hostName } : null;
                   return (
                     <div key={v._id} className="kiosk-card" onClick={() => { setSelectedVisit(v); setScreen("checkin_result"); }}>
                       <div style={{fontWeight:700,fontSize:"1rem",color:"#e6edf3"}}>{v.visitorName}</div>
@@ -361,9 +351,12 @@ export function KioskPage() {
               </div>
             )}
 
-            {searchQ && searchResults.length === 0 && (
+            {searched && !searching && error && (
+              <div style={styles.noResults}>{error}</div>
+            )}
+            {searched && !searching && !error && searchResults.length === 0 && (
               <div style={styles.noResults}>
-                No bookings found for "{searchQ}". Try a different name or email, or register as a walk-in.
+                No booking found for "{searchQ}". Check the email you booked with. Check-in opens 2 hours before your visit. You can also register as a walk-in.
               </div>
             )}
           </div>
@@ -378,7 +371,7 @@ export function KioskPage() {
               <div style={styles.visitorAvatar}>{(selectedVisit.visitorName??"V")[0].toUpperCase()}</div>
               <div style={styles.visitorName}>{selectedVisit.visitorName}</div>
               {(() => {
-                const host = staff.find((s: any) => s._id === selectedVisit.hostStaffId || s._id === selectedVisit.hostId);
+                const host = selectedVisit.hostName ? { name: selectedVisit.hostName } : null;
                 return host ? <div style={styles.visitDetail}>Visiting <strong style={{color:"#e6edf3"}}>{host.name}</strong></div> : null;
               })()}
               <div style={styles.visitDetail}>
@@ -558,7 +551,7 @@ export function KioskPage() {
             <p style={styles.screenSub}>Enter your name, phone number or email</p>
             <div style={{display:"flex",gap:12,marginTop:24}}>
               <input className="kiosk-input" placeholder="Your name, phone or email..."
-                value={checkoutQ} onChange={e => { const val = e.target.value; setCheckoutQ(val); const q = val.toLowerCase(); if (!q.trim()) { setCheckoutResults([]); return; } const r = (allVisits ?? []).filter((v) => { const nameMatch = (v.visitorName ?? "").toLowerCase().includes(q); const phoneMatch = (v.visitorPhone ?? "").toLowerCase().includes(q); const emailMatch = (v.visitorEmail ?? "").toLowerCase().includes(q); const active = ["checked_in","in_meeting","approved","accepted"].includes(v.status); return (nameMatch || phoneMatch || emailMatch) && active; }); setCheckoutResults(r); }}
+                value={checkoutQ} onChange={e => setCheckoutQ(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleCheckoutSearch()}
                 autoFocus style={{fontSize:"1.1rem",flex:1}} />
               <button className="kiosk-btn-primary" style={{width:"auto",padding:"16px 32px"}}

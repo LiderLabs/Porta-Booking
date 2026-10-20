@@ -31,8 +31,8 @@ export function BookingPage() {
 
   // Org-specific public config (branding + rules + staff)
   const orgConfig   = useQuery(api.orgSettings.getPublicConfig, slug ? { slug } : {});
-  const allBlocked  = useQuery(api.scheduling.listAllBlockedSlots);
-  const allVisits   = useQuery(api.scheduling.listApprovedVisits);
+  const allBlocked  = useQuery(api.scheduling.listAllBlockedSlots, slug ? { orgSlug: slug } : "skip");
+  const busyTimes   = useQuery(api.scheduling.listBusyTimes, slug ? { orgSlug: slug } : "skip");
   const bookVisit   = useMutation(api.scheduling.publicBook);
 
   const loading = orgConfig === undefined;
@@ -77,13 +77,13 @@ const purposeRequired = orgConfig?.rules?.purposeRequired ?? false;
     });
     if (blocked) return blocked.reason ? `Blocked: ${blocked.reason}` : "This slot is blocked";
     const pickedTs = new Date(`${form.scheduledDate}T${form.scheduledTime}`).getTime();
-    const clash = (allVisits ?? []).find((v: any) => {
-      if (v.hostStaffId !== form.hostStaffId) return false;
+    const clash = (busyTimes ?? []).find((v: any) => {
+      if (v.hostId !== form.hostStaffId) return false;
       return Math.abs(v.scheduledDate - pickedTs) < 30 * 60 * 1000;
     });
     if (clash) return `${selectedHost?.name ?? "This person"} already has a visit around this time`;
     return null;
-  }, [form.scheduledDate, form.scheduledTime, form.hostStaffId, allBlocked, allVisits, selectedHost]);
+  }, [form.scheduledDate, form.scheduledTime, form.hostStaffId, allBlocked, busyTimes, selectedHost]);
 
   const handleSubmit = async () => {
     if (!form.visitorName || !form.scheduledDate || !form.scheduledTime) return;
