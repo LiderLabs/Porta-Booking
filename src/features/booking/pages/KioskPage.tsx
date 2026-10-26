@@ -468,15 +468,7 @@ export function KioskPage() {
               </div>
               <div style={styles.fieldFull}>
                 <label style={styles.label}>Who are you visiting? <span style={{color:"#f85149"}}>*</span></label>
-                <select className="kiosk-select" value={form.hostStaffId}
-                  onChange={e => set("hostStaffId", e.target.value)}>
-                  <option value="">Select a person</option>
-                  {staff.map((s: any) => (
-                    <option key={s._id} value={s._id}>
-                      {s.name}{s.department ? " — " + s.department : ""}
-                    </option>
-                  ))}
-                </select>
+                <HostPicker staff={staff} value={form.hostStaffId} onChange={(id: string) => set("hostStaffId", id)} />
               </div>
             </div>
             <div style={{display:"flex",justifyContent:"flex-end",marginTop:24}}>
@@ -718,14 +710,48 @@ const styles: Record<string, any> = {
   footer: { padding:"16px 40px", borderTop:"1px solid rgba(255,255,255,0.06)", fontSize:"0.78rem", color:"#8b949e", textAlign:"center" as const, display:"flex", alignItems:"center", justifyContent:"center" },
 };
 
+// Tap-to-pick host list. Search box appears once there are more than 6 people.
+function HostPicker({ staff, value, onChange }: { staff: any[]; value: string; onChange: (id: string) => void }) {
+  const [q, setQ] = useState("");
+  const selected = staff.find((p: any) => p._id === value);
+  const needle = q.trim().toLowerCase();
+  const list = needle
+    ? staff.filter((p: any) => `${p.name ?? ""} ${p.department ?? ""} ${p.title ?? ""}`.toLowerCase().includes(needle))
+    : staff;
+  const border = "1px solid rgba(255,255,255,0.12)";
+  const sub = (p: any) => [p.title, p.department].filter(Boolean).join(" · ");
 
-
-
-
-
-
-
-
-
-
-
+  if (selected) {
+    return (
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,padding:"12px 16px",borderRadius:12,border,background:"rgba(255,255,255,0.06)"}}>
+        <div>
+          <div style={{fontWeight:700}}>{selected.name}</div>
+          {sub(selected) && <div style={{fontSize:"0.8rem",color:"#8b949e"}}>{sub(selected)}</div>}
+        </div>
+        <button type="button" onClick={() => { onChange(""); setQ(""); }}
+          style={{background:"none",border,borderRadius:8,color:"#8b949e",padding:"6px 14px",cursor:"pointer",fontFamily:"inherit"}}>
+          Change
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div>
+      {staff.length > 6 && (
+        <input className="kiosk-input" placeholder="Search by name or department…" autoComplete="off"
+          value={q} onChange={e => setQ(e.target.value)} style={{marginBottom:8}} />
+      )}
+      <div style={{maxHeight:240,overflowY:"auto",borderRadius:12,border}}>
+        {list.length === 0 ? (
+          <div style={{padding:"14px 16px",color:"#8b949e",fontSize:"0.9rem"}}>No one matches "{q}"</div>
+        ) : list.map((p: any) => (
+          <button type="button" key={p._id} onClick={() => { onChange(p._id); setQ(""); }}
+            style={{display:"block",width:"100%",textAlign:"left",padding:"12px 16px",background:"transparent",border:"none",borderBottom:border,color:"inherit",cursor:"pointer",fontFamily:"inherit"}}>
+            <div style={{fontWeight:600}}>{p.name}</div>
+            {sub(p) && <div style={{fontSize:"0.8rem",color:"#8b949e"}}>{sub(p)}</div>}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
