@@ -183,6 +183,7 @@ export function KioskPage() {
         purpose:        form.purpose        || undefined,
         hostStaffId:    (form.hostStaffId   || undefined) as any,
         scheduledDate:  dt,
+        walkIn:         true,
         duration:       form.duration,
         notes:          form.notes          || undefined,
         orgSlug:        slug ?? undefined,
