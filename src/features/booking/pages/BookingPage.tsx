@@ -57,16 +57,17 @@ const purposeRequired = orgConfig?.rules?.purposeRequired ?? false;
   const [form, setForm] = useState({
     visitorName:"", visitorEmail:"", visitorPhone:"",
     visitorCompany:"", purpose:"", hostStaffId:"",
-    scheduledDate: new Date().toISOString().split("T")[0],
-    scheduledTime: (() => { const n=new Date(); n.setMinutes(n.getMinutes()>=30?30:0,0,0); return n.toTimeString().slice(0,5); })(),
+    scheduledDate: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })(),
+    scheduledTime: (() => { const n=new Date(); const m=n.getMinutes(); n.setMinutes(m===0?0:m<=30?30:60,0,0); return n.toTimeString().slice(0,5); })(),
     duration: defaultDur, notes:"",
   });
 
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
-  const today       = new Date().toISOString().split("T")[0];
+  const today       = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; })();
   const selectedHost = staff.find((s: any) => s._id === form.hostStaffId);
 
   const conflictReason = useMemo(() => {
+    if (form.scheduledDate && form.scheduledTime && new Date(`${form.scheduledDate}T${form.scheduledTime}`).getTime() < Date.now() - 5 * 60 * 1000) return "That time has already passed";
     if (!form.scheduledDate || !form.scheduledTime || !form.hostStaffId) return null;
     const pickedMins = toMins(form.scheduledTime);
     const blocked = (allBlocked ?? []).find((b: any) => {

@@ -7,6 +7,10 @@ import { api } from "../../convex/api";
 // ── idle reset after 2 minutes ────────────────────────────────────────────────
 const IDLE_MS = 2 * 60 * 1000;
 
+const CheckMark = () => (
+  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12" /></svg>
+);
+
 type Screen =
   | "landing"
   | "checkin_search"
@@ -25,8 +29,19 @@ export function KioskPage() {
   useEffect(() => {
     const link = document.querySelector('link[rel="manifest"]');
     const prev = link ? link.getAttribute('href') : '';
-    if (link) link.setAttribute('href', '/manifest-kiosk.json');
-    return () => { if (link && prev) link.setAttribute('href', prev); };
+    let blobUrl = '';
+    // The installed kiosk must reopen THIS kiosk (with its org slug), so the start_url is built
+    // from the current address instead of the fixed "/kiosk/" in the manifest file.
+    fetch('/manifest-kiosk.json').then((r) => r.json()).then((m) => {
+      const origin = window.location.origin;
+      m.start_url = origin + window.location.pathname;
+      m.id = m.start_url;
+      m.scope = origin + '/kiosk/';
+      m.icons = (m.icons ?? []).map((i: any) => ({ ...i, src: origin + i.src }));
+      blobUrl = URL.createObjectURL(new Blob([JSON.stringify(m)], { type: 'application/manifest+json' }));
+      if (link) link.setAttribute('href', blobUrl);
+    }).catch(() => { if (link) link.setAttribute('href', '/manifest-kiosk.json'); });
+    return () => { if (blobUrl) URL.revokeObjectURL(blobUrl); if (link && prev) link.setAttribute('href', prev); };
   }, []);
 
   const [now, setNow] = useState(new Date());
@@ -66,7 +81,8 @@ export function KioskPage() {
   const [searching, setSearching] = useState(false);
   const [searched, setSearched]   = useState(false);
 
-  const today = new Date().toISOString().split("T")[0];
+  const localDate = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  const today = localDate(new Date());
   const [form, setForm] = useState({
     visitorName:"", visitorEmail:"", visitorPhone:"",
     visitorCompany:"", purpose:"", hostStaffId:"",
@@ -75,6 +91,12 @@ export function KioskPage() {
     duration: defaultDur, notes:"",
   });
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+  // A walk-in is arriving now, so the time is taken when they start, not when the page was loaded.
+  const startWalkIn = () => {
+    const n = new Date();
+    setForm(f => ({ ...f, scheduledDate: localDate(n), scheduledTime: n.toTimeString().slice(0, 5) }));
+    setScreen("walkin_details");
+  };
 
   // ── checkout search ───────────────────────────────────────────────────────
   const handleCheckoutSearch = () => {
@@ -103,8 +125,9 @@ export function KioskPage() {
 
   useEffect(() => {
     if (screen === "landing") return;
-    const t = setTimeout(resetToLanding, IDLE_MS);
-    const reset = () => { clearTimeout(t); };
+    let t = setTimeout(resetToLanding, IDLE_MS);
+    // Any touch or key press restarts the countdown. It used to cancel it for good.
+    const reset = () => { clearTimeout(t); t = setTimeout(resetToLanding, IDLE_MS); };
     window.addEventListener("pointerdown", reset);
     window.addEventListener("keydown", reset);
     return () => { clearTimeout(t); window.removeEventListener("pointerdown", reset); window.removeEventListener("keydown", reset); };
@@ -292,7 +315,7 @@ export function KioskPage() {
             <p style={styles.welcomeSub}>How can we help you today?</p>
             <div style={styles.landingBtns}>
               <button className="kiosk-btn-secondary" style={{fontSize:"1.25rem",padding:"28px 40px"}}
-                onClick={() => setScreen("walkin_details")}>
+                onClick={startWalkIn}>
                  I don’t have a schedule
                 <div style={{fontSize:"0.85rem",fontWeight:500,marginTop:6,opacity:0.8}}>Sign in</div>
               </button>
@@ -382,7 +405,7 @@ export function KioskPage() {
             {error && <div style={styles.error}>{error}</div>}
             <button className="kiosk-btn-primary" style={{marginTop:24,fontSize:"1.15rem",padding:"22px"}}
               disabled={submitting} onClick={() => handleCheckIn(selectedVisit)}>
-              {submitting ? "Checking in..." : " Confirm Check-in"}
+              {submitting ? "Checking in..." : "Confirm check-in"}
             </button>
           </div>
         )}
@@ -390,7 +413,7 @@ export function KioskPage() {
         {/* ── CHECK-IN DONE ─────────────────────────────────────────────── */}
         {screen === "checkin_done" && (
           <div className="kiosk-fade" style={styles.center}>
-            <div className="kiosk-check" style={{...styles.successIcon, background: primaryColor}}></div>
+            <div className="kiosk-check" style={{...styles.successIcon, background: primaryColor}}><CheckMark /></div>
             <h1 style={styles.welcomeTitle}>You're checked in!</h1>
             <p style={styles.welcomeSub}>
               {selectedVisit?.visitorName ? `Welcome, ${selectedVisit.visitorName.split(" ")[0]}!` : "Welcome!"}
@@ -611,7 +634,7 @@ export function KioskPage() {
         {/* ── CHECKOUT DONE ────────────────────────────────────────────────── */}
         {screen === "checkout_done" && (
           <div className="kiosk-fade" style={styles.center}>
-            <div className="kiosk-check" style={{...styles.successIcon, background:"#f85149"}}></div>
+            <div className="kiosk-check" style={{...styles.successIcon, background:"#f85149"}}><CheckMark /></div>
             <h1 style={styles.welcomeTitle}>Thank you, {selectedCheckout?.visitorName?.split(" ")[0]}!</h1>
             <p style={styles.welcomeSub}>You have been checked out. Have a great day!</p>
             <p style={{color:"#8b949e",fontSize:"0.85rem",marginTop:16}}>This screen will reset in a few seconds...</p>
@@ -621,7 +644,7 @@ export function KioskPage() {
         {/* ── WALK-IN DONE ──────────────────────────────────────────────── */}
         {screen === "walkin_done" && (
           <div className="kiosk-fade" style={styles.center}>
-            <div className="kiosk-check" style={{...styles.successIcon, background:"#f59e0b"}}></div>
+            <div className="kiosk-check" style={{...styles.successIcon, background:"#f59e0b"}}><CheckMark /></div>
             <h1 style={styles.welcomeTitle}>Request submitted!</h1>
             <p style={styles.welcomeSub}>
               Thank you, {form.visitorName.split(" ")[0]}! Your visit request has been received.
