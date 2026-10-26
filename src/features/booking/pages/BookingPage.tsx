@@ -3,6 +3,13 @@ import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../../convex/api";
+
+// Convex hides plain Error text in production; ConvexError carries a readable message in e.data
+const errMsg = (e: unknown, fallback: string) => {
+  const d = (e as any)?.data;
+  return typeof d === "string" && d ? d : fallback;
+};
+
 import { useTheme } from "../../../App";
 
 type Step = "details" | "datetime" | "review";
@@ -107,7 +114,7 @@ const purposeRequired = orgConfig?.rules?.purposeRequired ?? false;
       navigate("/confirmed", {
         state: { bookingId: visitId, name: form.visitorName, date: form.scheduledDate, time: form.scheduledTime, host: selectedHost?.name },
       });
-    } catch { setError("Something went wrong. Please try again."); }
+    } catch (e) { setError(errMsg(e, "Something went wrong. Please try again.")); }
     finally { setSub(false); }
   };
 

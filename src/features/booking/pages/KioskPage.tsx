@@ -4,6 +4,13 @@ import { useQuery, useMutation, useConvex } from "convex/react";
 import { useParams } from "react-router-dom";
 import { api } from "../../convex/api";
 
+// Convex hides plain Error text in production; ConvexError carries a readable message in e.data
+const errMsg = (e: unknown, fallback: string) => {
+  const d = (e as any)?.data;
+  return typeof d === "string" && d ? d : fallback;
+};
+
+
 // ── idle reset after 2 minutes ────────────────────────────────────────────────
 const IDLE_MS = 2 * 60 * 1000;
 
@@ -166,7 +173,8 @@ export function KioskPage() {
     if (!form.visitorName) return;
     setSub(true); setError("");
     try {
-      const dt = new Date(`${form.scheduledDate}T${form.scheduledTime}`).getTime();
+      // Walk-ins are arriving now: never send a time that has slipped into the past while the form was open
+      const dt = Math.max(new Date(`${form.scheduledDate}T${form.scheduledTime}`).getTime(), Date.now() + 60_000);
       await bookVisit({
         visitorName:    form.visitorName,
         visitorEmail:   form.visitorEmail   || undefined,
@@ -181,7 +189,7 @@ export function KioskPage() {
       });
       setScreen("walkin_done");
       setTimeout(resetToLanding, 10000);
-    } catch { setError("Something went wrong. Please try again or see the receptionist."); }
+    } catch (e) { setError(errMsg(e, "Something went wrong. Please try again or see the receptionist.")); }
     finally { setSub(false); }
   };
 
